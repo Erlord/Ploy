@@ -1,0 +1,18 @@
+h1 {
+	background-color: 87009F;
+	width: 1000px;
+	height: 100px;
+	text-align: center;
+	padding-top: 25px;
+}
+
+button {
+	width: 500px;
+	height: 400px;
+	background-color: 339ACC;
+	font-size: 40;
+}
+
+button:hover {
+	background-color: 006799;
+}

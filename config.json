@@ -1,0 +1,13 @@
+{
+   "environments":[
+      {
+         "id":"Test"
+      },
+      {
+         "id":"Stage"
+      },
+      {
+         "id":"Prod"
+      }
+   ]
+}
