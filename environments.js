@@ -26,7 +26,8 @@ var Ploy = {
 	    	url: '/getVersions',
 	    	success: function (versions) {
 	        	console.log('success!! addDeployMatrix');
-	        	Ploy.addVersionsElements(versions, Ploy.config.services);
+	        	Ploy.addVersionsElements(versions, Ploy.addAllServicesService(Ploy.config.services));
+	        	Ploy.addChangeListener();
 	    	}
 		});
 	},
@@ -37,17 +38,32 @@ var Ploy = {
 		});
 	},
 
+	addChangeListener: function (callback) {
+		var inputs = $("input[type='radio']");
+		inputs.change(Ploy.onVersionChanged);
+	},
+
+	onVersionChanged: function () {
+		var clickedService = $(this).attr('name'),
+		clickedValue = $(this).val(),
+		console.log("Selected: "  + clickedService + ' ' + clickedValue);
+		if (clickedService === "service_All") {
+			$("input[value='" + clickedValue + "'").prop('checked', true);
+		} else {
+			$('[name="service_All"]').prop('checked', false)
+		};
+	},
+
 	addVersionsElements: function (versions, services) {
 		var body;
 
 		body = $('body');
 
-		for (var i = services.length - 1; i >= 0; i--) {
+		for (var i = 0; i < services.length; i++) {
 			var appended = $('<div class="column"><p class="serviceHeader">' + services[i].id + '</p></div>').appendTo(body);
 			
-			for (var j = versions.length - 1; j >= 0; j--) {				
-				appended.append('<div class="checkbox"><input type="radio" value="' + versions[j] + '" id="roundedOne" name="service_' + services[i].id + '" >' + versions[j] +'</input></div>');
-				
+			for (var j = 0; j < versions.length; j++) {				
+				appended.append('<div class="checkbox"><input type="radio" value="' + versions[j] + '" name="service_' + services[i].id + '" >' + versions[j] +'</input></div>');				
 			};
 		};
 	},
@@ -55,9 +71,14 @@ var Ploy = {
 	addButtons: function (configuredEnvironments) {
 		var body = $('body');
 
-		for (var i = configuredEnvironments.length - 1; i >= 0; i--) {
+		for (var i = 0; i < configuredEnvironments.length; i++) {
 			body.append('<button>' + configuredEnvironments[i].id + '</button>');
 		};
+	},
+
+	addAllServicesService: function(versions) {
+		versions.unshift({id: 'All'});
+		return versions;
 	}
 }
 
