@@ -27,5 +27,6 @@
 		"id":"GranittService"
 	}
     ],
-    "versionsLocation":"c:\\test"
+    "versionsLocation":"c:\\test",
+    "script":"c:\\test\\test_script.ps1"
 }

@@ -9,6 +9,8 @@ var Ploy = {
 		Ploy.removeButtons();
 		Ploy.replaceText($('h1'), 'Deploy Matrix for: ' + environment);
 		Ploy.addDeployMatrix();
+		Ploy.addDeployButton();
+		Ploy.addNotificationArea();
 	},
 
 	removeButtons: function () {
@@ -32,6 +34,21 @@ var Ploy = {
 		});
 	},
 
+	addDeployButton: function () {
+		var body = $('body');
+		body.append('<button class="deployMatrix">Submit</button>');
+		$('.deployMatrix').click(function () {
+			Ploy.onDeployMatrix(this);
+		});
+	},
+
+	addNotificationArea: function () {
+		var body = $('body');
+		body.append('<div id="versionsArea"></div>');
+
+		body.append('<div id="notificationArea"></div>');
+	},
+
 	addClickListener: function (callback) {
 		$(':button').click(function () {
 			callback(this);
@@ -45,7 +62,7 @@ var Ploy = {
 
 	onVersionChanged: function () {
 		var clickedService = $(this).attr('name'),
-		clickedValue = $(this).val(),
+		clickedValue = $(this).val();
 		console.log("Selected: "  + clickedService + ' ' + clickedValue);
 		if (clickedService === "service_All") {
 			$("input[value='" + clickedValue + "'").prop('checked', true);
@@ -54,13 +71,38 @@ var Ploy = {
 		};
 	},
 
-	addVersionsElements: function (versions, services) {
-		var body;
+	onDeployMatrix: function (button) {
+		var matrix = _.map($(':checked'), function(input) { 
+			return {name: input.name, value: input.value};
+		});
 
-		body = $('body');
+		console.log('Deploying ' + matrix.length + ' services to: '+ environment);
+
+		for (var i = matrix.length - 1; i >= 0; i--) {
+			$.ajax({
+    			type: 'post',
+    			data: JSON.stringify({"matrix": matrix[i], "environment": environment}),
+    			url: '/deployMatrix',
+    			success: function (data) {
+        			console.log('success!! deployMatrix: ' + data);
+					Ploy.notify(data);
+	    		}
+			});
+		};
+	},
+
+	notify: function (message) {
+		var notificationArea = $("#notificationArea");
+		var content = document.createTextNode(message);
+		notificationArea.append('<p>' + message + ' time: ' + new Date().toLocaleTimeString() + '</p></br>');
+	},
+
+	addVersionsElements: function (versions, services) {
+		var versionsArea;
+		versionsArea = document.getElementById("versionsArea");
 
 		for (var i = 0; i < services.length; i++) {
-			var appended = $('<div class="column"><p class="serviceHeader">' + services[i].id + '</p></div>').appendTo(body);
+			var appended = $('<div class="column"><p class="serviceHeader">' + services[i].id + '</p></div>').appendTo(versionsArea);
 			
 			for (var j = 0; j < versions.length; j++) {				
 				appended.append('<div class="checkbox"><input type="radio" value="' + versions[j] + '" name="service_' + services[i].id + '" >' + versions[j] +'</input></div>');				

@@ -29,42 +29,41 @@ var app = connect()
 
   	  var url_parts = url.parse(req.url, true);
 
-
-      console.log('Request received: '+ url_parts.pathname + ' ' + url_parts.query.search);
+      console.log('Request received: '+ url_parts.pathname);
 
       if (req.method == 'GET') {
         switch (url_parts.pathname) {
-            case '/getConfig':
-            	config = ReadConfig();
-              Respond(response, config);              
-              break;
-          
-            case '/getVersions':  
-              config = ReadConfig();
-              var versions = ReadVersions(config.versionsLocation);  
-              Respond(response, versions);
-              break;
+          case '/getConfig':
+          	config = ReadConfig();
+            Respond(response, config);              
+            break;
+        
+          case '/getVersions':  
+            config = ReadConfig();
+            var versions = ReadVersions(config.versionsLocation);  
+            Respond(response, versions);
+            break;
           }
      	}
 
-      // if (req.method == 'POST') {
-      //   switch (url_parts.pathname) {
-      //     case '/getVersions':
-      //         req.on('data', function (dataChunk) {
-      //           console.log('received data: ' + dataChunk.toString());
-      //           var parsed = JSON.parse(dataChunk);
-      //           var versions = ReadVersions(ReadConfig().versionsLocation, parsed.environment);  
-      //           Respond(response, versions);
-      //         });
+      if (req.method == 'POST') {
+        switch (url_parts.pathname) {
+          case '/deployMatrix':
+              req.on('data', function (dataChunk) {
+                console.log('received data: ' + dataChunk.toString());
+                var deployData = JSON.parse(dataChunk.toString());
+                ExecuteScript(deployData, response);
+                //Respond(response, parsed);
+              });
 
-      //         req.on('end', function() {
-      //           console.log('request end');
-      //           response.writeHead(200, "OK", {'Content-Type': 'text/html'});
-      //           response.end();
-      //         });
-      //         break;
-      //   }
-      // }
+              // req.on('end', function() {
+              //   console.log('request end');
+              //   response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+              //   response.end();
+              // });
+              break;
+        }
+      }
 
   })
  .listen(4242);
@@ -80,10 +79,24 @@ function ReadVersions (versionsLocation) {
   return fs.readdirSync(versionsLocation);
 };
 
- function Respond (response, responseData) {
+function ExecuteScript (deployData, response) {
+  console.log('Execute script');
+
+  var spawn = require("child_process").spawn,child;
+  child = spawn("powershell.exe",[config.script, deployData]);
+  child.stdout.on("data", function (data) {
+    console.log('powershell data: ' + data);
+    if (data == 1) {
+      Respond(response, deployData.matrix.name + ' ' + deployData.matrix.value + ' ' + 'script finished');
+    }
+
+  });
+};
+
+function Respond (response, responseData) {
     var stringifiedResponse = JSON.stringify(responseData);
-    console.log(stringifiedResponse);
+    console.log('response: ' + stringifiedResponse);
     response.writeHead(200, { 'Content-Type': 'application/json' });   
     response.write(stringifiedResponse);
     response.end();
- }
+};
